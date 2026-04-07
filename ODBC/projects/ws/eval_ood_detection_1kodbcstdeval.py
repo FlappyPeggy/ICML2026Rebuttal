@@ -19,13 +19,12 @@ from model.model import structural_score, upsample_position_embedding
 # optimization is hardware‑related!!!!!!
 # please save your work and close other files beforehand to avoid potential data loss!!!!!!
 # donot use tor detection performance, computational cost only (execution order may differ, do not mixing them)
-# from model.model_fast import structural_score, upsample_position_embedding 
+# # from model.model_fast import structural_score, upsample_position_embedding 
+# # from model.clip_seg_fast import CLIPSegTensor # donot use tor detection performance, computational cost only
 from glob import glob
 
 
 # from model.clip_seg import CLIPSeg
-# # from model.clip_seg_fast import CLIPSegTensor # donot use tor detection performance, computational cost only
-
 # def init_worker(gpu_main, gpu_id):
 #     global model, device
 #     device = torch.device(f'cuda:{gpu_id}')
