@@ -16,10 +16,12 @@ from utils.utils_1k import PART_LABEL, CLASS2PART_MAPPING, get_text_from_datapat
 from utils.datasets import load_data, save_npz
 from model.clip_wrapper import CLIPWrapper
 from model.model import structural_score, upsample_position_embedding
+# from model.model_fast import structural_score, upsample_position_embedding # donot use tor detection performance, computational cost only
 from glob import glob
 
 
 # from model.clip_seg import CLIPSeg
+# # from model.clip_seg_fast import CLIPSegTensor # donot use tor detection performance, computational cost only
 
 # def init_worker(gpu_main, gpu_id):
 #     global model, device
@@ -95,6 +97,7 @@ def infer_my_loader(net, loader, text_features, text_part_features, CLASS2PARTMA
             images = images[goodmask]
             
             clip_fea, clip_attn = get_clip_fea(net, batch=images)
+            # geo_score.extend(geo_detector.detect_fast(demetabatch(all_data, gts), clip_fea=clip_fea, clip_attn_squeeze1=clip_attn))
             geo_score.extend(geo_detector.detect(demetabatch(all_data, gts), clip_fea=clip_fea, clip_attn_squeeze1=clip_attn))
     
     goodmask_list = torch.cat(goodmask_list, dim=0).numpy()
