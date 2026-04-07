@@ -363,3 +363,80 @@ class structural_score:
       out_list.extend(out)
         
     return out_list
+
+  # def detect_fast(self, data_list, clip_fea, clip_attn_squeeze1):
+  #   query_labels = [str(d['pred'].item()) for d in data_list[0:1]]
+  #   queries_masks = self.sapmling_feature_mask(data_list, clip_feas=clip_fea, clip_attn_squeeze1=clip_attn_squeeze1, training=False)
+  #   sim_diff_list = []
+  #   for q_mask, q_feat, label in zip(queries_masks, clip_fea[:, 1:], query_labels):
+  #     q_valid_parts = torch.nonzero(q_mask.sum(dim=1) > 0, as_tuple=False).squeeze(1)
+  #     if q_valid_parts.numel() == 0 or label == -1 or label not in self.data:
+  #       sim_diff_list.append(0.)
+  #       continue
+      
+  #     cand_masks_list  = self.data[label][0]
+  #     cand_feats_list  = self.data[label][1]
+  #     with ThreadPoolExecutor(max_workers=20) as executor:
+  #       list(executor.map(lambda args: self.eval_one_cand(args[0], args[1], q_valid_parts, q_mask, q_feat), zip(cand_masks_list, cand_feats_list)))
+
+
+  # def eval_one_cand(self, c_mask, c_feat, q_valid_parts, q_mask, q_feat):
+  #     cand_part_num = c_mask.shape[0]
+  #     matched_q_pts, matched_c_pts, matched_sims, matched_label, per_part_allpair_sim, per_part_allpair_pos = [], [], [], [], [], [[], []]
+  #     c_valid_parts = torch.nonzero(c_mask.sum(dim=1) > 0, as_tuple=False).squeeze(1)
+
+  #     for p in range(cand_part_num):
+  #       if p not in q_valid_parts or p not in c_valid_parts:
+  #         return 0,0,0
+  #       q_tok_idx = torch.nonzero(q_mask[p] > 0, as_tuple=False).squeeze(1)  # (nq,)
+  #       c_tok_idx = torch.nonzero(c_mask[p] > 0, as_tuple=False).squeeze(1)  # (nc,)
+  #       qF = q_feat[q_tok_idx]   # (nq, C)
+  #       cF = c_feat[c_tok_idx]   # (nc, C)
+  #       qC = self.coord[q_tok_idx]     # (nq, 2)
+  #       cC = self.coord[c_tok_idx]     # (nc, 2)
+
+  #       sim = pairwise_cosine_similarity(qF, cF)    # (nq, nc)
+  #       r, c = hungarian_match(sim)
+  #       per_part_allpair_sim.append(sim);per_part_allpair_pos[0].append(qC);per_part_allpair_pos[1].append(cC)
+  #       if r.numel() == 0:
+  #         return 0,0,0
+
+  #       matched_q_pts.append(qC[r])
+  #       matched_c_pts.append(cC[c])
+  #       matched_label.extend([p]*len(r))
+  #       matched_sims.append(sim[r, c])
+
+  #     if len(matched_label) < 3:
+  #       return 0,0,0
+
+  #     pts_src = torch.cat(matched_q_pts, dim=0)  # (L,2)
+  #     pts_dst = torch.cat(matched_c_pts, dim=0)  # (L,2)
+  #     pts_label = torch.tensor(matched_label).long()  # (L,)
+  #     sims_all = torch.cat(matched_sims, dim=0)  # (L,)
+
+  #     Trans_M, inmask, residuals = fit_ransac_fast(pts_src, pts_dst, pts_label)
+  #     if Trans_M is None or inmask.sum() == 0:
+  #       return 0,0,0
+      
+  #     for sim_all_mat, pos_all_mat_q, pos_all_mat_c in zip(per_part_allpair_sim, per_part_allpair_pos[0], per_part_allpair_pos[1]):
+  #       per_part_allpair_means = float((sim_all_mat*(-(transform_points_affine(Trans_M, pos_all_mat_q)[:, None] - pos_all_mat_c[None]).pow(2).sum(-1)/28/28).exp()).mean().item())
+        
+  #     geom_means_per_part, sim_means_per_part_inlier, offset = [], [], 0
+  #     for p in c_valid_parts:
+  #       if p not in q_valid_parts:
+  #         return 0,0,0
+  #       nq = int((q_mask[p] > 0).sum().item())
+  #       nc = int((c_mask[p] > 0).sum().item())
+  #       blk = min(nq, nc)
+  #       if blk == 0: 
+  #         return 0,0,0
+  #       sl = slice(offset, offset+blk)
+  #       offset += blk
+        
+  #       geom_res_ = -residuals[sl].float().pow(2)
+  #       geom_means_per_part.append(float((geom_res_*0.5).exp().mean().item()))
+  #       sim_means_per_part_inlier.append(float((sims_all[sl].float()*(geom_res_/28/28).exp()).mean().item()))
+
+  #     geo_diff_val = sum(geom_means_per_part)/len(q_valid_parts)
+  #     all_part_allpair_means = np.array(per_part_allpair_means).sum(0)/len(q_valid_parts)
+  #     return geo_diff_val, all_part_allpair_means, sim_means_per_part_inlier
