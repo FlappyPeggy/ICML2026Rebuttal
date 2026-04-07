@@ -440,3 +440,108 @@ class structural_score:
   #     geo_diff_val = sum(geom_means_per_part)/len(q_valid_parts)
   #     all_part_allpair_means = np.array(per_part_allpair_means).sum(0)/len(q_valid_parts)
   #     return geo_diff_val, all_part_allpair_means, sim_means_per_part_inlier
+
+
+# def transform_points_affine_batch(M, pts):
+#     A = M[:, :2, :2]
+#     t = M[:, :2, 2] 
+#     out = torch.einsum('nd,kcd->knc', pts, A)
+
+#     out = out + t[:, None, :]
+
+#     return out
+
+
+# def solve_affine_batch(pts_src_batch, pts_dst_batch):
+#     K = pts_src_batch.shape[0]
+#     device = pts_src_batch.device
+#     dtype = pts_src_batch.dtype
+
+#     x = pts_src_batch[:, :, 0]
+#     y = pts_src_batch[:, :, 1]
+
+#     u = pts_dst_batch[:, :, 0]
+#     v = pts_dst_batch[:, :, 1]
+
+#     A = torch.zeros((K, 6, 6), device=device, dtype=dtype)
+#     b = torch.zeros((K, 6), device=device, dtype=dtype)
+
+#     A[:, 0::2, 0] = x
+#     A[:, 0::2, 1] = y
+#     A[:, 0::2, 2] = 1
+
+#     A[:, 1::2, 3] = x
+#     A[:, 1::2, 4] = y
+#     A[:, 1::2, 5] = 1
+
+#     b[:, 0::2] = u
+#     b[:, 1::2] = v
+
+#     sol = torch.linalg.solve(A.float(), b.float())
+#     M = torch.zeros((K, 3, 3), device=device, dtype=dtype)
+#     M[:, :2, :] = sol.view(K, 2, 3)
+#     M[:, 2, 2] = 1
+
+#     return M
+
+# def batch_balanced_sampling(label):
+#     inverse = torch.unique(label, return_inverse=True)[1]
+#     counts = torch.bincount(inverse)
+
+#     weights = 1.0 / counts[inverse].float()
+#     weights = weights / weights.sum()
+
+#     idx = torch.multinomial(
+#         weights,
+#         500 * 3,
+#         replacement=True
+#     )
+
+#     return idx.view(500, 3)
+
+
+# def non_collinear_mask(pts, eps=1e-6):
+#     p1 = pts[:, 0]
+#     p2 = pts[:, 1]
+#     p3 = pts[:, 2]
+
+#     area = (
+#         (p2[:, 0] - p1[:, 0]) * (p3[:, 1] - p1[:, 1])
+#         - (p2[:, 1] - p1[:, 1]) * (p3[:, 0] - p1[:, 0])
+#     ).abs()
+
+#     return area > eps
+
+
+# def fit_ransac_fast(
+#     pts_src,
+#     pts_dst,
+#     pts_label,
+# ):
+#     samples = batch_balanced_sampling(
+#         pts_label,
+#     )
+#     src_samples = pts_src[samples]
+#     valid = non_collinear_mask(src_samples)
+#     src_samples = src_samples[valid]
+#     dst_samples = pts_dst[samples][valid]
+
+#     M_all = solve_affine_batch(
+#         src_samples,
+#         dst_samples
+#     )
+
+#     pred = transform_points_affine_batch(M_all, pts_src)
+
+#     residuals = (pred - pts_dst[None]).norm(dim=-1)
+
+#     inliers = residuals < 4
+#     counts = inliers.sum(1)
+
+#     best_idx = counts.argmax()
+
+#     return (
+#         M_all[best_idx],
+#         inliers[best_idx],
+#         residuals[best_idx]
+#     )
