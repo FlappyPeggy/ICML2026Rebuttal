@@ -16,7 +16,10 @@ from utils.utils_1k import PART_LABEL, CLASS2PART_MAPPING, get_text_from_datapat
 from utils.datasets import load_data, save_npz
 from model.clip_wrapper import CLIPWrapper
 from model.model import structural_score, upsample_position_embedding
-# from model.model_fast import structural_score, upsample_position_embedding # donot use tor detection performance, computational cost only
+# optimization is hardware‑related!!!!!!
+# please save your work and close other files beforehand to avoid potential data loss!!!!!!
+# donot use tor detection performance, computational cost only (execution order may differ, do not mixing them)
+# from model.model_fast import structural_score, upsample_position_embedding 
 from glob import glob
 
 
